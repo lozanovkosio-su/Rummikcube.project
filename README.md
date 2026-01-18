@@ -1,0 +1,2 @@
+# Rummikcube.project
+project rummikcube
