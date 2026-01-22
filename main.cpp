@@ -684,14 +684,27 @@ bool applyMove(Player &player,
 		addedCount = 0; // will compute later safely
 	}
 
-	// Removed from table = old - new
-	Tile removedFromTable[MAX_TILES]; int removedCount = 0;
-	bool okRemoved = getDifferenceAsTiles(oldTableTiles, oldCount, newTableTiles, newCount, removedFromTable, removedCount);
-	if (!okRemoved) {
-		// This means new had tiles not in old; that's fine. The diff old-new should always work.
-		// If it fails, something is inconsistent.
-		std::cout << "Error while comparing tables." << std::endl;
-		return false;
+	// Removed from table = old - new  (robust, allows empty old table)
+	Tile removedFromTable[MAX_TILES];
+	int removedCount = 0;
+	{
+		bool usedNew[MAX_TILES];
+		for (int i = 0; i < newCount; i++) usedNew[i] = false;
+
+		removedCount = 0;
+		for (int i = 0; i < oldCount; i++) {
+			bool matched = false;
+			for (int j = 0; j < newCount; j++) {
+				if (!usedNew[j] && tilesEqual(oldTableTiles[i], newTableTiles[j])) {
+					usedNew[j] = true;
+					matched = true;
+					break;
+				}
+			}
+			if (!matched) {
+				removedFromTable[removedCount++] = oldTableTiles[i];
+			}
+		}
 	}
 
 	// Recompute addedFromHand robustly (new - old) without assuming subset
